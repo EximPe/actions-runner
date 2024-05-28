@@ -9,18 +9,14 @@ on:
   pull_request:
     branches: [ "main" ]
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions:
   contents: write
   packages: write
   id-token: write
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: eximpe/action-runner
-
 
 jobs:
   release:
