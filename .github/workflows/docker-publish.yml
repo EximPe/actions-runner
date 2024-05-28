@@ -14,14 +14,10 @@ permissions:
   packages: write
   id-token: write
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: eximpe/action-runner
-
 jobs:
   release:
-    name: Release and build on Push
-    runs-on: ubuntu-latest
+    name: Release on Push
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
