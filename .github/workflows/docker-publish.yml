@@ -52,6 +52,7 @@ jobs:
           git tag -a "$TAG" -m "Release $TAG"
           git push origin "$TAG"
       - name: Set output
+        id: tag_output
         run: echo "TAG=$TAG" >> $GITHUB_OUTPUT
       - name: Create release
         env:
@@ -73,9 +74,8 @@ jobs:
             ghcr.io/eximpe/action-runner
             eximpe/action-runner
           tags: |
-            type=raw,value={{with.calc_tag.outputs.TAG}}
+            type=raw,value={{with.tag_output.outputs.TAG}}
             type=raw,value=latest
-            type=raw,value={{TAG}}
             type=semver,pattern={{version}}
           flavor: |
             latest=false
