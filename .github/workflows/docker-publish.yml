@@ -15,16 +15,56 @@ env:
 
 
 jobs:
-  build:
+  release:
+    name: Release and build on Push
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
       id-token: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necessary to fetch all tags
+
+      - name: Calculate next tag
+        id: calc_tag
+        run: |
+          YEAR=$(date +"%y")
+          WEEK=$(date +"%V")
+          LAST_TAG=$(git tag -l "v$YEAR.$WEEK.*" | sort -V | tail -n1)
+          LAST_TAG=$(echo "$LAST_TAG" | tr -d '\r' | sed 's/[[:space:]]*$//')
+          echo "Last Tag: $LAST_TAG"
+          if [[ $LAST_TAG == "" ]]; then
+            MINOR=0
+          else
+            MINOR=$(echo $LAST_TAG | awk -F '.' '{print $NF}')
+            echo "Minor Version: $MINOR"
+            MINOR=$((MINOR + 1))
+          fi
+          TAG="v$YEAR.$WEEK.$MINOR"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "Next Tag: $TAG"
+      - name: Configure git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+      - name: Create and push tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$TAG" \
+              --repo="$GITHUB_REPOSITORY" \
+              --title="$TAG" \
+              --generate-notes \
+              --draft
+
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -32,20 +72,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Get latest tag
-        id: latest_tag
-        run: echo ::set-output name=TAG::$(git describe --abbrev=0 --tags)
-
-      - name: Determine next version
-        id: next_version
-        run: echo ::set-output name=VERSION::$(./calculate_next_version.sh ${{ steps.latest_tag.outputs.TAG }})
-
       - name: Build Docker image
         run: |
           docker buildx build \
             --file Dockerfile \
             --tag ${{ github.repository }}:latest \
-            --tag ${{ github.repository }}:${{ steps.next_version.outputs.VERSION }} \
+            --tag ${{ github.repository }}:$TAG \
             --push .
 
       - name: Log into registry ${{ env.REGISTRY }}
@@ -65,7 +97,7 @@ jobs:
       - name: Push image to GitHub Container Registry
         run: |
           docker push ghcr.io/${{ github.repository }}:latest
-          docker push ghcr.io/${{ github.repository }}:${{ steps.next_version.outputs.VERSION }}
+          docker push ghcr.io/${{ github.repository }}:$TAG
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -77,5 +109,5 @@ jobs:
       - name: Push image to Docker Hub
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository }}:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository }}:${{ steps.next_version.outputs.VERSION }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository }}:$TAG
 
