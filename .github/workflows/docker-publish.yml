@@ -74,8 +74,9 @@ jobs:
             ghcr.io/eximpe/action-runner
             eximpe/action-runner
           tags: |
-            type=raw,value={{with.tag_output.outputs.TAG}}
+            type=raw,value={{env.TAG}}
             type=raw,value=latest
+            type=raw,value=${{ github.sha }}
             type=semver,pattern={{version}}
           flavor: |
             latest=false
