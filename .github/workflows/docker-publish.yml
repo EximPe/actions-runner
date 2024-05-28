@@ -69,7 +69,7 @@ jobs:
         with:
           images: |
             ghcr.io/eximpe/action-runner
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
+            eximpe/action-runner
           tags: |
             type=raw,value={{with.calc_tag.outputs.TAG}}
             type=raw,value=latest
