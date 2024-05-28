@@ -71,7 +71,7 @@ jobs:
             ghcr.io/eximpe/action-runner
             ${{ secrets.DOCKER_HUB_USERNAME }}/${{ github.event.repository.name }}
           tags: |
-            type=raw,value=$TAG
+            type=raw,value=${{TAG}}
             type=raw,value=latest
             type=semver,pattern={{version}}
           flavor: |
