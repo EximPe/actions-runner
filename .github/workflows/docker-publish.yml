@@ -15,7 +15,7 @@ permissions:
   id-token: write
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: eximpe/action-runner
 
 
 jobs:
@@ -75,8 +75,8 @@ jobs:
         run: |
           docker buildx build \
             --file Dockerfile \
-            --tag ghcr.io/eximpe/actoin-runner:latest \
-            --tag ghcr.io/eximpe/actoin-runner:$TAG \
+            --tag ghcr.io/eximpe/action-runner:latest \
+            --tag ghcr.io/eximpe/action-runner:$TAG \
             --tag docker.io/eximpe/action-runner:latest \
             --tag docker.io/eximpe/action-runner:$TAG .
 
@@ -96,8 +96,8 @@ jobs:
 
       - name: Push image to GitHub Container Registry
         run: |
-          docker push ghcr.io/eximpe/actoin-runner:latest
-          docker push ghcr.io/eximpe/actoin-runner:$TAG
+          docker push ghcr.io/eximpe/action-runner:latest
+          docker push ghcr.io/eximpe/action-runner:$TAG
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
